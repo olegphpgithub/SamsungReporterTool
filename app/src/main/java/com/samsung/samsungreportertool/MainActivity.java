@@ -24,10 +24,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void getCallDetails() {
         String[] projection = new String[] {
+                CallLog.Calls._ID,
                 CallLog.Calls.CACHED_NAME,
                 CallLog.Calls.NUMBER,
                 CallLog.Calls.TYPE,
-                CallLog.Calls.DATE
+                CallLog.Calls.DATE,
+                CallLog.Calls.DURATION
         };
 
         try {
@@ -42,20 +44,34 @@ public class MainActivity extends AppCompatActivity {
 
             selection = CallLog.Calls.DATE + " = ? ";
             selectionArgs = new String[] {today};
-            Debug.log("a");
+            Debug.log("a", new Date());
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH) - 1;
+            String st = new String("%d - %d - %d");
+            st = String.format(st, year, month, day);
+            Debug.log(st, new Date());
+
             Cursor cursor =  this.getApplicationContext().getContentResolver().query(
-                    CallLog.Calls.CONTENT_URI,
-                    projection,
-                    CallLog.Calls.DATE + " >= ?",
-                    new String[] { createDate(2020,1,15).toString()},
-                    null);
+                CallLog.Calls.CONTENT_URI,
+                projection,
+                CallLog.Calls.DATE + " >= ?",
+                new String[] { createDate(year, month, day).toString()},
+                null
+            );
+
             Debug.log("b");
             while (cursor.moveToNext()) {
-                String name = cursor.getString(0);
-                String number = cursor.getString(1);
-                String type = cursor.getString(2); // https://developer.android.com/reference/android/provider/CallLog.Calls.html#TYPE
-                String time = cursor.getString(3); // epoch time - https://developer.android.com/reference/java/text/DateFormat.html#parse(java.lang.String
-                Debug.log(number + " | " + time);
+                String id = cursor.getString(0);
+                String name = cursor.getString(1);
+                String number = cursor.getString(2);
+                String type = cursor.getString(3);
+                String time = cursor.getString(4);
+                String duration = cursor.getString(5);
+                Debug.log(number + " | " + time + " | " + type + " = " + name + " ! " + duration);
             }
             cursor.close();
 

@@ -7,6 +7,7 @@ import android.os.Environment;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 
 public class Debug {
 
@@ -21,6 +22,11 @@ public class Debug {
         } catch(java.lang.Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    public static void log(java.lang.String message, java.util.Date date) {
+        java.lang.String when = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
+        log(when + " " + message);
     }
 
     public static void dumpBundle(Bundle bundle) {

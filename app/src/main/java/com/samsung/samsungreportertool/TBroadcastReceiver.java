@@ -53,7 +53,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                     Debug.log("EXTRA_STATE_RINGING");
                 }
                 if(state.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
-                    Debug.log("EXTRA_STATE_OFFHOOK");
+                    Debug.log("EXTRA_STATE_OFFHOOK", new Date());
                     myTimer = new Timer();
                     myTimer.schedule(new TimerTask() {
                         @Override
@@ -86,6 +86,16 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         } catch (Exception e) {
             Debug.dumpException(e);
         }
+    }
+
+    public static Long createDate(int year, int month, int day)
+    {
+        Calendar calendar = Calendar.getInstance();
+
+        calendar.set(year, month, day);
+
+        return calendar.getTimeInMillis();
+
     }
 
 }
