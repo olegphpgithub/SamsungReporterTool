@@ -54,7 +54,10 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
         //We listen to two intents.  The new outgoing call only tells us of an outgoing call.  We use it to get the number.
         if (intent.getAction().equals("android.intent.action.NEW_OUTGOING_CALL")) {
-            savedNumber = intent.getExtras().getString("android.intent.extra.PHONE_NUMBER");
+//            savedNumber = intent.getExtras().getString("android.intent.extra.PHONE_NUMBER");
+            savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
+            Debug.log("android.intent.action.NEW_OUTGOING_CALL");
+            Debug.log(savedNumber);
         } else {
             String stateStr = intent.getExtras().getString(TelephonyManager.EXTRA_STATE);
             String number = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
@@ -108,22 +111,22 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     //Derived classes should override these to respond to specific events of interest
     protected void onIncomingCallStarted(Context ctx, String number, Date start) {
-        Debug.log("onIncomingCallStarted");
+        Debug.log("onIncomingCallStarted", new Date());
         Debug.log(number);
     }
 
     protected void onOutgoingCallStarted(Context ctx, String number, Date start) {
-        Debug.log("onOutgoingCallStarted");
+        Debug.log("onOutgoingCallStarted", new Date());
         Debug.log(number);
     }
 
     protected void onIncomingCallEnded(Context ctx, String number, Date start, Date end) {
-        Debug.log("onIncomingCallEnded");
+        Debug.log("onIncomingCallEnded", new Date());
         Debug.log(number);
     }
 
     protected void onOutgoingCallEnded(Context ctx, String number, Date start, Date end) {
-        Debug.log("onOutgoingCallEnded");
+        Debug.log("onOutgoingCallEnded", new Date());
         Debug.log(number);
     }
 
