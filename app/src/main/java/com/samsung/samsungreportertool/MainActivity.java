@@ -16,13 +16,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Debug.log("start 001");
-        getCallDetails();
+        Debug.log("start 001", new Date());
+        int duration = getDurationByNumber("2424");
+        String s = String.format("%s - <%d>", "2424", duration);
+        Debug.log(s);
         Debug.log("start 002");
     }
 
-
-    private void getCallDetails() {
+    private int getDurationByNumber(java.lang.String telephone_number) {
+        int duration_overall = 0;
         String[] projection = new String[] {
                 CallLog.Calls._ID,
                 CallLog.Calls.CACHED_NAME,
@@ -50,16 +52,14 @@ public class MainActivity extends AppCompatActivity {
             calendar.setTime(new Date());
             int year = calendar.get(Calendar.YEAR);
             int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH) - 1;
-            String st = new String("%d - %d - %d");
-            st = String.format(st, year, month, day);
-            Debug.log(st, new Date());
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            int hour = calendar.get(Calendar.HOUR_OF_DAY) - 3;
 
             Cursor cursor =  this.getApplicationContext().getContentResolver().query(
                 CallLog.Calls.CONTENT_URI,
                 projection,
                 CallLog.Calls.DATE + " >= ?",
-                new String[] { createDate(year, month, day).toString()},
+                new String[] { createDate(year, month, day, hour).toString()},
                 null
             );
 
@@ -70,25 +70,26 @@ public class MainActivity extends AppCompatActivity {
                 String number = cursor.getString(2);
                 String type = cursor.getString(3);
                 String time = cursor.getString(4);
-                String duration = cursor.getString(5);
+                int duration = cursor.getInt(5);
                 Debug.log(number + " | " + time + " | " + type + " = " + name + " ! " + duration);
+                if(number.contains(telephone_number)) {
+                    duration_overall += duration;
+                }
             }
             cursor.close();
 
         } catch (Exception e) {
             Debug.dumpException(e);
         }
-        Debug.log("zz");
+        return duration_overall;
     }
 
-    public static Long createDate(int year, int month, int day)
+    public static Long createDate(int year, int month, int day, int hour)
     {
         Calendar calendar = Calendar.getInstance();
-
         calendar.set(year, month, day);
-
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
         return calendar.getTimeInMillis();
-
     }
 
 }
