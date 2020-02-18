@@ -33,6 +33,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = "Phone call";
     private static TelephonyManager telephony;
     private static Context m_context;
+    private static Rule []rules;
 
     private static int lastState = TelephonyManager.CALL_STATE_IDLE;
     private static Date callStartTime;
@@ -44,6 +45,18 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     private static String larisa_number = "2424";
     private static int larisa_limit = 555;
+
+    {
+        Rule rule = new Rule();
+        rule.number = "9212168346";
+        rule.duration = 550;
+        rules[0] = rule;
+
+        rule = new Rule();
+        rule.number = "1002424";
+        rule.duration = 50;
+        rules[1] = rule;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -187,16 +200,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    public static Long createDate(int year, int month, int day, int hour)
-    {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(year, month, day);
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        return calendar.getTimeInMillis();
-    }
-
-
-    private int getDurationByNumber(Context context,  java.lang.String telephone_number) {
+    private int getDurationByNumber(Context context, java.lang.String telephone_number, java.util.Date after) {
         int duration_overall = 0;
         String[] projection = new String[] {
                 CallLog.Calls._ID,
@@ -209,34 +213,17 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
         try {
 
-            // String sortOrder = ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = new Date();
-            String today = formatter.format(date);
-
-            String selection = null;
-            String []selectionArgs = null;
-
-            selection = CallLog.Calls.DATE + " = ? ";
-            selectionArgs = new String[] {today};
-            Debug.log("a", new Date());
-
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            int hour = calendar.get(Calendar.HOUR_OF_DAY) - 3;
 
             Cursor cursor =  context.getApplicationContext().getContentResolver().query(
                     CallLog.Calls.CONTENT_URI,
                     projection,
                     CallLog.Calls.DATE + " >= ?",
-                    new String[] { createDate(year, month, day, hour).toString()},
+                    new String[] { Long.toString(calendar.getTimeInMillis()) },
                     null
             );
 
-            Debug.log("b");
             while (cursor.moveToNext()) {
                 String id = cursor.getString(0);
                 String name = cursor.getString(1);
@@ -255,6 +242,10 @@ public class TBroadcastReceiver extends BroadcastReceiver {
             Debug.dumpException(e);
         }
         return duration_overall;
+    }
+
+    private void take_over(java.lang.String number) {
+
     }
 
 }
