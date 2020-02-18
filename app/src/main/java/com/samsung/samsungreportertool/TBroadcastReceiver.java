@@ -29,24 +29,19 @@ import java.lang.reflect.Method;
 
 public class TBroadcastReceiver extends BroadcastReceiver {
 
-    private static java.lang.String incomingNumber;
-    private static final String TAG = "Phone call";
     private static TelephonyManager telephony;
     private static Context m_context;
     private static Rule []rules;
+    private Timer timer;
 
     private static int lastState = TelephonyManager.CALL_STATE_IDLE;
     private static Date callStartTime;
     private static boolean isIncoming;
-    private static String savedNumber;  //because the passed incoming is only valid in ringing
-
-//    private static String larisa_number = "9212168346";
-//    private static int larisa_limit = 555;
-
-    private static String larisa_number = "2424";
-    private static int larisa_limit = 555;
+    private static String savedNumber; // because the passed incoming is only valid in ringing
 
     {
+        timer = null;
+
         Rule rule = new Rule();
         rule.number = "9212168346";
         rule.duration = 550;
@@ -61,16 +56,15 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        Timer myTimer;
         telephony = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         m_context = context;
 
-        //We listen to two intents.  The new outgoing call only tells us of an outgoing call.  We use it to get the number.
-        if (intent.getAction().equals("android.intent.action.NEW_OUTGOING_CALL")) {
-//            savedNumber = intent.getExtras().getString("android.intent.extra.PHONE_NUMBER");
+        //We listen to two intents.
+        // The new outgoing call only tells us of an outgoing call.
+        // We use it to get the number.
+
+        if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
             savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
-            Debug.log("android.intent.action.NEW_OUTGOING_CALL");
-            Debug.log(savedNumber);
         } else {
             String stateStr = intent.getExtras().getString(TelephonyManager.EXTRA_STATE);
             String number = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
@@ -87,70 +81,45 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
             onCallStateChanged(context, state, number);
         }
-
-
-//        try {
-//
-//            Bundle bundle = intent.getExtras();
-//
-//            if(intent.getAction().equals(TelephonyManager.ACTION_PHONE_STATE_CHANGED)) {
-//                Debug.log("ACTION_PHONE_STATE_CHANGED");
-//                String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
-//                if(state.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
-//                    Debug.log("EXTRA_STATE_RINGING");
-//                }
-//                if(state.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
-//                    Debug.log("EXTRA_STATE_OFFHOOK", new Date());
-//                    myTimer = new Timer();
-//                    myTimer.schedule(new TimerTask() {
-//                        @Override
-//                        public void run() {
-//                            TimerMethod();
-//                        }
-//
-//                    }, 10000);
-//                }
-//                if(state.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
-//                    Debug.log("EXTRA_STATE_IDLE");
-//                }
-//            }
-//
-//        } catch (Exception e) {
-//            Debug.dumpException(e);
-//        }
-//
-
     }
 
     //Derived classes should override these to respond to specific events of interest
-    protected void onIncomingCallStarted(Context ctx, String number, Date start) {
+    protected void onIncomingCallStarted(Context context, String number, Date start) {
         Debug.log("onIncomingCallStarted", new Date());
         Debug.log(number);
+        take_over(context, number);
     }
 
-    protected void onOutgoingCallStarted(Context ctx, String number, Date start) {
+    protected void onOutgoingCallStarted(Context context, String number, Date start) {
         Debug.log("onOutgoingCallStarted", new Date());
         Debug.log(number);
+        take_over(context, number);
     }
 
-    protected void onIncomingCallEnded(Context ctx, String number, Date start, Date end) {
+    protected void onIncomingCallEnded(Context context, String number, Date start, Date end) {
         Debug.log("onIncomingCallEnded", new Date());
         Debug.log(number);
+        timer.cancel();
+        timer = null;
     }
 
-    protected void onOutgoingCallEnded(Context ctx, String number, Date start, Date end) {
+    protected void onOutgoingCallEnded(Context context, String number, Date start, Date end) {
         Debug.log("onOutgoingCallEnded", new Date());
         Debug.log(number);
+        timer.cancel();
+        timer = null;
     }
 
-    protected void onMissedCall(Context ctx, String number, Date start) {
+    protected void onMissedCall(Context context, String number, Date start) {
         Debug.log("onMissedCall");
         Debug.log(number);
+        timer.cancel();
+        timer = null;
     }
 
     public void onCallStateChanged(Context context, int state, String number) {
         if(lastState == state){
-            //No change, debounce extras
+            // No change, debounce extras
             return;
         }
         switch (state) {
@@ -161,7 +130,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                 onIncomingCallStarted(context, number, callStartTime);
                 break;
             case TelephonyManager.CALL_STATE_OFFHOOK:
-                //Transition of ringing->offhook are pickups of incoming calls.  Nothing done on them
+                // Transition of ringing->offhook are pickups of incoming calls. Nothing done on them
                 if(lastState != TelephonyManager.CALL_STATE_RINGING){
                     isIncoming = false;
                     callStartTime = new Date();
@@ -169,9 +138,9 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                 }
                 break;
             case TelephonyManager.CALL_STATE_IDLE:
-                //Went to idle-  this is the end of a call.  What type depends on previous state(s)
+                // Went to idle- this is the end of a call. What type depends on previous state(s)
                 if(lastState == TelephonyManager.CALL_STATE_RINGING){
-                    //Ring but no pickup-  a miss
+                    // Ring but no pickup- a miss
                     onMissedCall(context, savedNumber, callStartTime);
                 }
                 else if(isIncoming){
@@ -187,6 +156,9 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     private void TimerMethod() {
         try {
+
+            Debug.log("Shutdown begin", new java.util.Date());
+
             Class<?> c = Class.forName(telephony.getClass().getName());
             Method m = c.getDeclaredMethod("getITelephony");
             m.setAccessible(true);
@@ -195,12 +167,19 @@ public class TBroadcastReceiver extends BroadcastReceiver {
             Method endCallMethod = telephonyServiceClass.getDeclaredMethod("endCall");
             endCallMethod.setAccessible(true);
             endCallMethod.invoke(telephonyService);
+
+            Debug.log("Shutdown end", new java.util.Date());
+
         } catch (Exception e) {
             Debug.dumpException(e);
         }
     }
 
     private int getDurationByNumber(Context context, java.lang.String telephone_number, java.util.Date after) {
+
+        java.lang.String dbg = String.format("Get duration about %s", telephone_number);
+        Debug.log(dbg, new java.util.Date());
+
         int duration_overall = 0;
         String[] projection = new String[] {
                 CallLog.Calls._ID,
@@ -231,7 +210,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                 String type = cursor.getString(3);
                 String time = cursor.getString(4);
                 int duration = cursor.getInt(5);
-                Debug.log(number + " | " + time + " | " + type + " = " + name + " ! " + duration);
+                Debug.log(type + " | " + time + " | " + number + " ! " + duration);
                 if(number.contains(telephone_number)) {
                     duration_overall += duration;
                 }
@@ -244,8 +223,39 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         return duration_overall;
     }
 
-    private void take_over(java.lang.String number) {
+    private void take_over(Context context, java.lang.String number) {
+        for(Rule rule : rules) {
+            if(number.contains(rule.number)) {
+                Calendar cal = Calendar.getInstance();
+                cal.add(Calendar.HOUR, -3);
+                java.util.Date after = cal.getTime();
+                int duration = getDurationByNumber(context, number, after);
 
+                String dbg = String.format("Duration of %s is %d", number, duration);
+                Debug.log(dbg, new Date());
+
+                int left = 0;
+                if(duration > rule.duration) {
+                    left = 1000;
+                } else {
+                    left = rule.duration - duration;
+                }
+
+                dbg = String.format("Terminater %s after %d", number, left);
+                Debug.log(dbg, new Date());
+
+                timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        TimerMethod();
+                    }
+
+                }, left);
+
+                break;
+            }
+        }
     }
 
 }
