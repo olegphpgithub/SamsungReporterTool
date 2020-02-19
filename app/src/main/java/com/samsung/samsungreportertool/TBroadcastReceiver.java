@@ -41,16 +41,18 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     {
         timer = null;
+        rules = new Rule[2];
 
         Rule rule = new Rule();
-        rule.number = "9212168346";
-        rule.duration = 550;
+        rule.number = "1002424"; // Technology number
+        rule.duration = 50;
         rules[0] = rule;
 
         rule = new Rule();
-        rule.number = "1002424";
-        rule.duration = 50;
+        rule.number = "9212168346"; // Astasheva Larisa Ivanovna
+        rule.duration = 550;
         rules[1] = rule;
+
     }
 
     @Override
@@ -85,20 +87,20 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     //Derived classes should override these to respond to specific events of interest
     protected void onIncomingCallStarted(Context context, String number, Date start) {
-        Debug.log("onIncomingCallStarted", new Date());
-        Debug.log(number);
+        java.lang.String dbg = java.lang.String.format("On incoming call started: %s", number);
+        Debug.log(dbg, new java.util.Date());
         take_over(context, number);
     }
 
     protected void onOutgoingCallStarted(Context context, String number, Date start) {
-        Debug.log("onOutgoingCallStarted", new Date());
-        Debug.log(number);
+        java.lang.String dbg = java.lang.String.format("On outgoing call started: %s", number);
+        Debug.log(dbg, new java.util.Date());
         take_over(context, number);
     }
 
     protected void onIncomingCallEnded(Context context, String number, Date start, Date end) {
-        Debug.log("onIncomingCallEnded", new Date());
-        Debug.log(number);
+        java.lang.String dbg = java.lang.String.format("On incoming call ended: %s", number);
+        Debug.log(dbg, new java.util.Date());
         if(timer != null) {
             timer.cancel();
             timer = null;
@@ -106,8 +108,8 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     }
 
     protected void onOutgoingCallEnded(Context context, String number, Date start, Date end) {
-        Debug.log("onOutgoingCallEnded", new Date());
-        Debug.log(number);
+        java.lang.String dbg = java.lang.String.format("On outgoing call ended: %s", number);
+        Debug.log(dbg, new java.util.Date());
         if(timer != null) {
             timer.cancel();
             timer = null;
@@ -183,7 +185,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     private int getDurationByNumber(Context context, java.lang.String telephone_number, java.util.Date after) {
 
-        java.lang.String dbg = String.format("Get duration about %s", telephone_number);
+        java.lang.String dbg = java.lang.String.format("Get duration about %s", telephone_number);
         Debug.log(dbg, new java.util.Date());
 
         int duration_overall = 0;
@@ -230,7 +232,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void take_over(Context context, java.lang.String number) {
-        if(timer != null) {
+        if(timer == null) {
             for (Rule rule : rules) {
                 if (number.contains(rule.number)) {
                     Calendar cal = Calendar.getInstance();
@@ -257,7 +259,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                         public void run() {
                             TimerMethod();
                         }
-                    }, left);
+                    }, left * 1000);
 
                     break;
                 }
