@@ -32,7 +32,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     private static TelephonyManager telephony;
     private static Context m_context;
     private static Rule []rules;
-    private Timer timer;
+    private static Timer timer;
 
     private static int lastState = TelephonyManager.CALL_STATE_IDLE;
     private static Date callStartTime;
@@ -99,22 +99,28 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     protected void onIncomingCallEnded(Context context, String number, Date start, Date end) {
         Debug.log("onIncomingCallEnded", new Date());
         Debug.log(number);
-        timer.cancel();
-        timer = null;
+        if(timer != null) {
+            timer.cancel();
+            timer = null;
+        }
     }
 
     protected void onOutgoingCallEnded(Context context, String number, Date start, Date end) {
         Debug.log("onOutgoingCallEnded", new Date());
         Debug.log(number);
-        timer.cancel();
-        timer = null;
+        if(timer != null) {
+            timer.cancel();
+            timer = null;
+        }
     }
 
     protected void onMissedCall(Context context, String number, Date start) {
         Debug.log("onMissedCall");
         Debug.log(number);
-        timer.cancel();
-        timer = null;
+        if(timer != null) {
+            timer.cancel();
+            timer = null;
+        }
     }
 
     public void onCallStateChanged(Context context, int state, String number) {
@@ -193,7 +199,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         try {
 
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(new Date());
+            calendar.setTime(after);
 
             Cursor cursor =  context.getApplicationContext().getContentResolver().query(
                     CallLog.Calls.CONTENT_URI,
@@ -224,36 +230,37 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void take_over(Context context, java.lang.String number) {
-        for(Rule rule : rules) {
-            if(number.contains(rule.number)) {
-                Calendar cal = Calendar.getInstance();
-                cal.add(Calendar.HOUR, -3);
-                java.util.Date after = cal.getTime();
-                int duration = getDurationByNumber(context, number, after);
+        if(timer != null) {
+            for (Rule rule : rules) {
+                if (number.contains(rule.number)) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.add(Calendar.HOUR, -3);
+                    java.util.Date after = cal.getTime();
+                    int duration = getDurationByNumber(context, number, after);
 
-                String dbg = String.format("Duration of %s is %d", number, duration);
-                Debug.log(dbg, new Date());
+                    String dbg = String.format("Duration of %s is %d", number, duration);
+                    Debug.log(dbg, new Date());
 
-                int left = 0;
-                if(duration > rule.duration) {
-                    left = 1000;
-                } else {
-                    left = rule.duration - duration;
-                }
-
-                dbg = String.format("Terminater %s after %d", number, left);
-                Debug.log(dbg, new Date());
-
-                timer = new Timer();
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        TimerMethod();
+                    int left = 0;
+                    if (duration > rule.duration) {
+                        left = 1000;
+                    } else {
+                        left = rule.duration - duration;
                     }
 
-                }, left);
+                    dbg = String.format("Terminater %s after %d", number, left);
+                    Debug.log(dbg, new Date());
 
-                break;
+                    timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            TimerMethod();
+                        }
+                    }, left);
+
+                    break;
+                }
             }
         }
     }
