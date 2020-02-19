@@ -38,10 +38,12 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     private static Date callStartTime;
     private static boolean isIncoming;
     private static String savedNumber; // because the passed incoming is only valid in ringing
+    private static int interval;
 
     {
+        interval = 3;
         timer = null;
-        rules = new Rule[2];
+        rules = new Rule[5];
 
         Rule rule = new Rule();
         rule.number = "1002424"; // Technology number
@@ -50,9 +52,23 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
         rule = new Rule();
         rule.number = "9212168346"; // Astasheva Larisa Ivanovna
-        rule.duration = 550;
+        rule.duration = 600;
         rules[1] = rule;
 
+        rule = new Rule();
+        rule.number = "9052383930"; // Astashev Maxim Sergeevich
+        rule.duration = 540;
+        rules[2] = rule;
+
+        rule = new Rule();
+        rule.number = "9532499917"; // Zueva Alina
+        rule.duration = 660;
+        rules[3] = rule;
+
+        rule = new Rule();
+        rule.number = "9532499917"; // Tamara Vasilievna
+        rule.duration = 420;
+        rules[4] = rule;
     }
 
     @Override
@@ -61,7 +77,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         telephony = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         m_context = context;
 
-        //We listen to two intents.
+        // We listen to two intents.
         // The new outgoing call only tells us of an outgoing call.
         // We use it to get the number.
 
@@ -117,8 +133,8 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     }
 
     protected void onMissedCall(Context context, String number, Date start) {
-        Debug.log("onMissedCall");
-        Debug.log(number);
+        java.lang.String dbg = java.lang.String.format("On missed call: %s", number);
+        Debug.log(dbg, new java.util.Date());
         if(timer != null) {
             timer.cancel();
             timer = null;
@@ -183,6 +199,13 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
+    private int getRandomDelta() {
+        Calendar calendar = Calendar.getInstance();
+        int week = calendar.get(Calendar.DAY_OF_WEEK);
+        int day = calendar.get(Calendar.DAY_OF_MONTH) % 5;
+        return week * day;
+    }
+
     private int getDurationByNumber(Context context, java.lang.String telephone_number, java.util.Date after) {
 
         java.lang.String dbg = java.lang.String.format("Get duration about %s", telephone_number);
@@ -236,18 +259,20 @@ public class TBroadcastReceiver extends BroadcastReceiver {
             for (Rule rule : rules) {
                 if (number.contains(rule.number)) {
                     Calendar cal = Calendar.getInstance();
-                    cal.add(Calendar.HOUR, -3);
+                    cal.add(Calendar.HOUR, -interval);
                     java.util.Date after = cal.getTime();
                     int duration = getDurationByNumber(context, number, after);
 
                     String dbg = String.format("Duration of %s is %d", number, duration);
                     Debug.log(dbg, new Date());
 
-                    int left = 0;
-                    if (duration > rule.duration) {
-                        left = 1000;
-                    } else {
+                    int left = 5;
+                    if (duration < rule.duration) {
                         left = rule.duration - duration;
+                        java.util.Random r = new java.util.Random();
+                        int min = 10;
+                        int max = 20;
+                        left = left + r.nextInt(max - min + 1) + min;
                     }
 
                     dbg = String.format("Terminater %s after %d", number, left);
