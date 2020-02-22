@@ -85,13 +85,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         try {
             try {
 
-                Debug.log("==========", new Date());
-                Bundle bundle = intent.getExtras();
-
-                if (Build.VERSION.SDK_INT == 23) { // 6.0
-
-                    Debug.log("====23====", new Date());
-                    Debug.dumpBundle(bundle);
+                if (Build.VERSION.SDK_INT >= 23) { // 6.0
 
                     // We listen to two intents.
                     // The new outgoing call only tells us of an outgoing call.
@@ -110,12 +104,10 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                         } else if (stateStr.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
                             state = TelephonyManager.CALL_STATE_RINGING;
                         }
-
-                        onCallStateChanged(context, state, number);
+                        if(number != null) {
+                            onCallStateChanged(context, state, number);
+                        }
                     }
-                } else if (Build.VERSION.SDK_INT == 28) { // 9.0
-                    Debug.log("====28====", new Date());
-                    Debug.dumpBundle(bundle);
                 }
 
             } catch (java.lang.Exception exception) {
@@ -130,52 +122,31 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     protected void onIncomingCallStarted(Context context, String number, Date start) {
         java.lang.String dbg = java.lang.String.format("On incoming call started: %s", number);
         Debug.log(dbg, new java.util.Date());
-        take_over(context, number);
+        startSupervisor(context, number);
     }
 
     protected void onOutgoingCallStarted(Context context, String number, Date start) {
         java.lang.String dbg = java.lang.String.format("On outgoing call started: %s", number);
         Debug.log(dbg, new java.util.Date());
-        take_over(context, number);
+        startSupervisor(context, number);
     }
 
     protected void onIncomingCallEnded(Context context, String number, Date start, Date end) {
         java.lang.String dbg = java.lang.String.format("On incoming call ended: %s", number);
         Debug.log(dbg, new java.util.Date());
-        if((timer != null) && (timerTask != null)) {
-            Debug.log("Cancel timer", new java.util.Date());
-            timerTask.cancel();
-            timer.cancel();
-            timer.purge();
-            timerTask = null;
-            timer = null;
-        }
+        stopSupervisor();
     }
 
     protected void onOutgoingCallEnded(Context context, String number, Date start, Date end) {
         java.lang.String dbg = java.lang.String.format("On outgoing call ended: %s", number);
         Debug.log(dbg, new java.util.Date());
-        if((timer != null) && (timerTask != null)) {
-            Debug.log("Cancel timer", new java.util.Date());
-            timerTask.cancel();
-            timer.cancel();
-            timer.purge();
-            timerTask = null;
-            timer = null;
-        }
+        stopSupervisor();
     }
 
     protected void onMissedCall(Context context, String number, Date start) {
         java.lang.String dbg = java.lang.String.format("On missed call: %s", number);
         Debug.log(dbg, new java.util.Date());
-        if((timer != null) && (timerTask != null)) {
-            Debug.log("Cancel timer", new java.util.Date());
-            timerTask.cancel();
-            timer.cancel();
-            timer.purge();
-            timerTask = null;
-            timer = null;
-        }
+        stopSupervisor();
     }
 
     public void onCallStateChanged(Context context, int state, String number) {
@@ -235,6 +206,17 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
+    private static void stopSupervisor() {
+        if((timer != null) && (timerTask != null)) {
+            Debug.log("Cancel timer", new java.util.Date());
+            timerTask.cancel();
+            timer.cancel();
+            timer.purge();
+            timerTask = null;
+            timer = null;
+        }
+    }
+
     private int getDurationByNumber(Context context, java.lang.String telephone_number, java.util.Date after) {
 
         java.lang.String dbg = java.lang.String.format("Get duration of conversation with %s", telephone_number);
@@ -283,8 +265,8 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         return duration_overall;
     }
 
-    private void take_over(Context context, java.lang.String number) {
-        if(timer == null) {
+    private void startSupervisor(Context context, java.lang.String number) {
+        if( (timer == null) && (timerTask == null) ) {
             for (Rule rule : rules) {
                 if (number.contains(rule.number)) {
                     Calendar cal = Calendar.getInstance();
