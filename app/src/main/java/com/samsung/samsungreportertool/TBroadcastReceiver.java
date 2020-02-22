@@ -32,7 +32,8 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     private static TelephonyManager telephony;
     private static Context m_context;
     private static Rule []rules;
-    private static Timer timer;
+    private static TimerTask timerTask;
+    private static Timer timer = null;
 
     private static int lastState = TelephonyManager.CALL_STATE_IDLE;
     private static Date callStartTime;
@@ -42,12 +43,11 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     {
         interval = 3;
-        timer = null;
-        rules = new Rule[5];
+        rules = new Rule[6];
 
         Rule rule = new Rule();
-        rule.number = "1002424"; // Technology number
-        rule.duration = 50;
+        rule.number = "8001002424"; // Technology number
+        rule.duration = 20;
         rules[0] = rule;
 
         rule = new Rule();
@@ -69,6 +69,11 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         rule.number = "9532499917"; // Tamara Vasilievna
         rule.duration = 420;
         rules[4] = rule;
+
+        rule = new Rule();
+        rule.number = "9113758792"; // Nikiforova Maria
+        rule.duration = 420;
+        rules[5] = rule;
     }
 
     @Override
@@ -117,8 +122,12 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     protected void onIncomingCallEnded(Context context, String number, Date start, Date end) {
         java.lang.String dbg = java.lang.String.format("On incoming call ended: %s", number);
         Debug.log(dbg, new java.util.Date());
-        if(timer != null) {
+        if((timer != null) && (timerTask != null)) {
+            Debug.log("Cancel timer", new java.util.Date());
+            timerTask.cancel();
             timer.cancel();
+            timer.purge();
+            timerTask = null;
             timer = null;
         }
     }
@@ -126,8 +135,12 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     protected void onOutgoingCallEnded(Context context, String number, Date start, Date end) {
         java.lang.String dbg = java.lang.String.format("On outgoing call ended: %s", number);
         Debug.log(dbg, new java.util.Date());
-        if(timer != null) {
+        if((timer != null) && (timerTask != null)) {
+            Debug.log("Cancel timer", new java.util.Date());
+            timerTask.cancel();
             timer.cancel();
+            timer.purge();
+            timerTask = null;
             timer = null;
         }
     }
@@ -135,14 +148,18 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     protected void onMissedCall(Context context, String number, Date start) {
         java.lang.String dbg = java.lang.String.format("On missed call: %s", number);
         Debug.log(dbg, new java.util.Date());
-        if(timer != null) {
+        if((timer != null) && (timerTask != null)) {
+            Debug.log("Cancel timer", new java.util.Date());
+            timerTask.cancel();
             timer.cancel();
+            timer.purge();
+            timerTask = null;
             timer = null;
         }
     }
 
     public void onCallStateChanged(Context context, int state, String number) {
-        if(lastState == state){
+        if(lastState == state) {
             // No change, debounce extras
             return;
         }
@@ -155,7 +172,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                 break;
             case TelephonyManager.CALL_STATE_OFFHOOK:
                 // Transition of ringing->offhook are pickups of incoming calls. Nothing done on them
-                if(lastState != TelephonyManager.CALL_STATE_RINGING){
+                if(lastState != TelephonyManager.CALL_STATE_RINGING) {
                     isIncoming = false;
                     callStartTime = new Date();
                     onOutgoingCallStarted(context, savedNumber, callStartTime);
@@ -167,10 +184,9 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                     // Ring but no pickup- a miss
                     onMissedCall(context, savedNumber, callStartTime);
                 }
-                else if(isIncoming){
+                else if(isIncoming) {
                     onIncomingCallEnded(context, savedNumber, callStartTime, new Date());
-                }
-                else{
+                } else {
                     onOutgoingCallEnded(context, savedNumber, callStartTime, new Date());
                 }
                 break;
@@ -199,16 +215,9 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    private int getRandomDelta() {
-        Calendar calendar = Calendar.getInstance();
-        int week = calendar.get(Calendar.DAY_OF_WEEK);
-        int day = calendar.get(Calendar.DAY_OF_MONTH) % 5;
-        return week * day;
-    }
-
     private int getDurationByNumber(Context context, java.lang.String telephone_number, java.util.Date after) {
 
-        java.lang.String dbg = java.lang.String.format("Get duration about %s", telephone_number);
+        java.lang.String dbg = java.lang.String.format("Get duration of conversation with %s", telephone_number);
         Debug.log(dbg, new java.util.Date());
 
         int duration_overall = 0;
@@ -263,7 +272,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                     java.util.Date after = cal.getTime();
                     int duration = getDurationByNumber(context, number, after);
 
-                    String dbg = String.format("Duration of %s is %d", number, duration);
+                    String dbg = String.format("Duration of conversation with %s is %d", number, duration);
                     Debug.log(dbg, new Date());
 
                     int left = 5;
@@ -275,16 +284,16 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                         left = left + r.nextInt(max - min + 1) + min;
                     }
 
-                    dbg = String.format("Terminater %s after %d", number, left);
+                    dbg = String.format("Shutdown call with %s after %d seconds", number, left);
                     Debug.log(dbg, new Date());
 
-                    timer = new Timer();
-                    timer.schedule(new TimerTask() {
-                        @Override
+                    timerTask = new TimerTask() {
                         public void run() {
                             TimerMethod();
                         }
-                    }, left * 1000);
+                    };
+                    timer = new Timer("Timer");
+                    timer.schedule(timerTask, left * 1000);
 
                     break;
                 }
