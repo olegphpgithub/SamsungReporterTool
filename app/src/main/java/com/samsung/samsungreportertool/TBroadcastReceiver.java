@@ -82,27 +82,47 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         telephony = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         m_context = context;
 
-        // We listen to two intents.
-        // The new outgoing call only tells us of an outgoing call.
-        // We use it to get the number.
+        try {
+            try {
 
-        if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
-            savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
-        } else {
-            String stateStr = intent.getExtras().getString(TelephonyManager.EXTRA_STATE);
-            String number = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
-            int state = 0;
-            if(stateStr.equals(TelephonyManager.EXTRA_STATE_IDLE)){
-                state = TelephonyManager.CALL_STATE_IDLE;
-            }
-            else if(stateStr.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)){
-                state = TelephonyManager.CALL_STATE_OFFHOOK;
-            }
-            else if(stateStr.equals(TelephonyManager.EXTRA_STATE_RINGING)){
-                state = TelephonyManager.CALL_STATE_RINGING;
-            }
+                Debug.log("==========", new Date());
+                Bundle bundle = intent.getExtras();
 
-            onCallStateChanged(context, state, number);
+                if (Build.VERSION.SDK_INT == 23) { // 6.0
+
+                    Debug.log("====23====", new Date());
+                    Debug.dumpBundle(bundle);
+
+                    // We listen to two intents.
+                    // The new outgoing call only tells us of an outgoing call.
+                    // We use it to get the number.
+
+                    if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
+                        savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
+                    } else {
+                        String stateStr = intent.getExtras().getString(TelephonyManager.EXTRA_STATE);
+                        String number = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
+                        int state = 0;
+                        if (stateStr.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
+                            state = TelephonyManager.CALL_STATE_IDLE;
+                        } else if (stateStr.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
+                            state = TelephonyManager.CALL_STATE_OFFHOOK;
+                        } else if (stateStr.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
+                            state = TelephonyManager.CALL_STATE_RINGING;
+                        }
+
+                        onCallStateChanged(context, state, number);
+                    }
+                } else if (Build.VERSION.SDK_INT == 28) { // 9.0
+                    Debug.log("====28====", new Date());
+                    Debug.dumpBundle(bundle);
+                }
+
+            } catch (java.lang.Exception exception) {
+                Debug.dumpException(exception);
+            }
+        } catch (java.lang.Exception exception) {
+            exception.printStackTrace();
         }
     }
 
