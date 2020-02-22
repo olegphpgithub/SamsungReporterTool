@@ -1,0 +1,39 @@
+2020-02-22 18:29:04 ==========
+2020-02-22 18:29:04 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+state$RINGING$java.lang.String
+}
+2020-02-22 18:29:04 ==========
+2020-02-22 18:29:04 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+incoming_number$+79532537899$java.lang.String
+state$RINGING$java.lang.String
+}
+2020-02-22 18:29:11 ==========
+2020-02-22 18:29:11 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+state$OFFHOOK$java.lang.String
+}
+2020-02-22 18:29:11 ==========
+2020-02-22 18:29:11 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+incoming_number$+79532537899$java.lang.String
+state$OFFHOOK$java.lang.String
+}
+2020-02-22 18:29:18 ==========
+2020-02-22 18:29:18 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+state$IDLE$java.lang.String
+}
+2020-02-22 18:29:18 ==========
+2020-02-22 18:29:18 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+incoming_number$+79532537899$java.lang.String
+state$IDLE$java.lang.String
+}

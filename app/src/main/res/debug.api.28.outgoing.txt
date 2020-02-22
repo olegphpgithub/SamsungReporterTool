@@ -1,0 +1,32 @@
+2020-02-22 18:26:46 ==========
+2020-02-22 18:26:46 ====28====
+Action: android.intent.action.NEW_OUTGOING_CALL
+{
+android.intent.extra.PHONE_NUMBER$88001002424$java.lang.String
+}
+2020-02-22 18:26:46 ==========
+2020-02-22 18:26:46 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+state$OFFHOOK$java.lang.String
+}
+2020-02-22 18:26:46 ==========
+2020-02-22 18:26:46 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+incoming_number$88001002424$java.lang.String
+state$OFFHOOK$java.lang.String
+}
+2020-02-22 18:27:03 ==========
+2020-02-22 18:27:03 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+state$IDLE$java.lang.String
+}
+2020-02-22 18:27:03 ==========
+2020-02-22 18:27:03 ====28====
+Action: android.intent.action.PHONE_STATE
+{
+incoming_number$88001002424$java.lang.String
+state$IDLE$java.lang.String
+}
