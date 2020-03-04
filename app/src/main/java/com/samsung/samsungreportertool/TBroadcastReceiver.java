@@ -66,7 +66,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         rules[3] = rule;
 
         rule = new Rule();
-        rule.number = "9532499917"; // Tamara Vasilievna
+        rule.number = "9210019236"; // Tamara Vasilievna
         rule.duration = 420;
         rules[4] = rule;
 
