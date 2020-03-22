@@ -43,37 +43,77 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
     {
         interval = 3;
-        rules = new Rule[6];
+        rules = new Rule[0x0D + 0x01];
 
         Rule rule = new Rule();
         rule.number = "8001002424"; // Technology number
         rule.duration = 20;
-        rules[0] = rule;
+        rules[0x00] = rule;
 
         rule = new Rule();
         rule.number = "9212168346"; // Astasheva Larisa Ivanovna
         rule.duration = 600;
-        rules[1] = rule;
+        rules[0x01] = rule;
 
         rule = new Rule();
         rule.number = "9052383930"; // Astashev Maxim Sergeevich
         rule.duration = 540;
-        rules[2] = rule;
+        rules[0x02] = rule;
 
         rule = new Rule();
         rule.number = "9532499917"; // Zueva Alina
         rule.duration = 660;
-        rules[3] = rule;
+        rules[0x03] = rule;
 
         rule = new Rule();
         rule.number = "9210019236"; // Tamara Vasilievna
         rule.duration = 420;
-        rules[4] = rule;
+        rules[0x04] = rule;
 
         rule = new Rule();
         rule.number = "9113758792"; // Nikiforova Maria
         rule.duration = 420;
-        rules[5] = rule;
+        rules[0x05] = rule;
+
+        rule = new Rule();
+        rule.number = "9532537899"; // Korzun Oleg
+        rule.duration = interval * 60 * 60;
+        rules[0x06] = rule;
+
+        rule = new Rule();
+        rule.number = "9009960144"; // Korzun Galina
+        rule.duration = interval * 60 * 60;
+        rules[0x07] = rule;
+
+        rule = new Rule();
+        rule.number = "9113693323"; // Korzun Galina
+        rule.duration = interval * 60 * 60;
+        rules[0x08] = rule;
+
+        rule = new Rule();
+        rule.number = "9113693323"; // Korzun Nikolay
+        rule.duration = interval * 60 * 60;
+        rules[0x09] = rule;
+
+        rule = new Rule();
+        rule.number = "9532462904"; // Korzun Nikolay
+        rule.duration = interval * 60 * 60;
+        rules[0x0A] = rule;
+
+        rule = new Rule();
+        rule.number = "9811732891"; // Michael
+        rule.duration = 10;
+        rules[0x0B] = rule;
+
+        rule = new Rule();
+        rule.number = "9215015490"; //
+        rule.duration = 420;
+        rules[0x0C] = rule;
+
+        rule = new Rule();
+        rule.number = "*"; // Default
+        rule.duration = 1200;
+        rules[0x0D] = rule;
     }
 
     @Override
@@ -268,7 +308,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     private void startSupervisor(Context context, java.lang.String number) {
         if( (timer == null) && (timerTask == null) ) {
             for (Rule rule : rules) {
-                if (number.contains(rule.number)) {
+                if (number.contains(rule.number) || rule.number.equals("*")) {
                     Calendar cal = Calendar.getInstance();
                     cal.add(Calendar.HOUR, -interval);
                     java.util.Date after = cal.getTime();
