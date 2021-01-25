@@ -38,40 +38,34 @@ public class ForegroundService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         final NotificationCompat.Builder notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Foreground Service")
-                .setContentText("sssss")
-                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setContentText("Runnable thread")
+                //.setSmallIcon(R.drawable.ic_launcher_background)
                 .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
                 .setVibrate(null) // Passing null here silently fails
                 .setContentIntent(pendingIntent);
 
-
-
-
         //do heavy work on a background thread
         //stopSelf();
-
 
         new Thread(new Runnable() {
             public void run() {
                 // TODO Auto-generated method stub
                 while (true) {
-                    Debug.log("Runnable thread", new java.util.Date());
+                    Debug.log("Runnable thread no visual", new java.util.Date());
                     try {
-                        Thread.sleep(8000);
+                        Thread.sleep(60 * 1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     //REST OF CODE HERE//
                     counter = counter + 1;
-                    notification.setContentText("test" + counter);
+                    notification.setContentText("Runnable thread " + counter);
                     startForeground(1, notification.build());
                 }
-
             }
         }).start();
 
-
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     @Override
@@ -93,6 +87,7 @@ public class ForegroundService extends Service {
                     NotificationManager.IMPORTANCE_LOW
             );
             serviceChannel.enableVibration(false);
+            serviceChannel.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
