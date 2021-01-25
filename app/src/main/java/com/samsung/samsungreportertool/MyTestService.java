@@ -4,7 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.os.SystemClock;
 
-class MyTestService extends IntentService {
+public class MyTestService extends IntentService {
     // Must create a default constructor
     public MyTestService() {
         // Used to name the worker thread, important only for debugging.
