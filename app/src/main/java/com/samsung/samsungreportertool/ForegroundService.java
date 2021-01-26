@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.Build;
+import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 
 import androidx.annotation.Nullable;
@@ -20,7 +21,7 @@ public class ForegroundService extends Service {
     private static final String TAG = ForegroundService.class.getName();
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
     private static final long DELAYED_TIME = 1000;
-
+    private PowerManager.WakeLock wakeLock;
 
     int counter = 0;
 
@@ -29,7 +30,11 @@ public class ForegroundService extends Service {
         super.onCreate();
         Debug.log("onCreate Service", new java.util.Date());
 //        String input = .getStringExtra("inputExtra");
-
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyApp::MyWakelock2468");
+        wakeLock.acquire();
+        Debug.log("onCreate Service locked", new java.util.Date());
     }
 
     @Override
@@ -68,6 +73,11 @@ public class ForegroundService extends Service {
 
                 stopSelf(serviceId);
                 stopForeground(true);
+
+                Intent intent=new Intent();
+                intent.setAction("com.toxy.LOAD_URL");
+                intent.putExtra("url", "com.toxy");
+                sendBroadcast(intent);
             }
         }).start();
 
@@ -77,6 +87,8 @@ public class ForegroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Debug.log("wakeLock.release", new java.util.Date());
+        wakeLock.release();
     }
 
     @Nullable

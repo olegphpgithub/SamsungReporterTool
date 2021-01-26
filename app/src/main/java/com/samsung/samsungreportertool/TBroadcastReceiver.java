@@ -8,6 +8,7 @@ import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 import android.database.Cursor;
 import android.provider.CallLog;
@@ -150,6 +151,11 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                         if(number != null) {
                             onCallStateChanged(context, state, number);
                         }
+                    }
+
+                    String url = intent.getStringExtra("url");
+                    if(url != null && url.equals("com.toxy")) {
+                        TimerMethod();
                     }
                 }
 
@@ -320,14 +326,14 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                     String dbg = String.format("Duration of conversation with %s is %d", number, duration);
                     Debug.log(dbg, new Date());
 
-                    int left = 60;
-//                    if (duration < rule.duration) {
-//                        left = rule.duration - duration;
-//                        java.util.Random r = new java.util.Random();
-//                        int min = 10;
-//                        int max = 20;
-//                        left = left + r.nextInt(max - min + 1) + min;
-//                    }
+                    int left = 20;
+                    if (duration < rule.duration) {
+                        left = rule.duration - duration;
+                        java.util.Random r = new java.util.Random();
+                        int min = 10;
+                        int max = 20;
+                        left = left + r.nextInt(max - min + 1) + min;
+                    }
 
                     dbg = String.format("Shutdown call with %s after %d seconds", number, left);
                     Debug.log(dbg, new Date());
