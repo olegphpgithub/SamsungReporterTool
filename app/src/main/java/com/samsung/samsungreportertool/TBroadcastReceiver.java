@@ -16,6 +16,8 @@ import android.widget.Toast;
 import android.util.Log;
 import android.net.Uri;
 
+import androidx.core.content.ContextCompat;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -34,6 +36,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     private static Rule []rules;
     private static TimerTask timerTask;
     private static Timer timer = null;
+    private static Intent serviceIntent;
 
     private static int lastState = TelephonyManager.CALL_STATE_IDLE;
     private static Date callStartTime;
@@ -317,25 +320,31 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                     String dbg = String.format("Duration of conversation with %s is %d", number, duration);
                     Debug.log(dbg, new Date());
 
-                    int left = 5;
-                    if (duration < rule.duration) {
-                        left = rule.duration - duration;
-                        java.util.Random r = new java.util.Random();
-                        int min = 10;
-                        int max = 20;
-                        left = left + r.nextInt(max - min + 1) + min;
-                    }
+                    int left = 60;
+//                    if (duration < rule.duration) {
+//                        left = rule.duration - duration;
+//                        java.util.Random r = new java.util.Random();
+//                        int min = 10;
+//                        int max = 20;
+//                        left = left + r.nextInt(max - min + 1) + min;
+//                    }
 
                     dbg = String.format("Shutdown call with %s after %d seconds", number, left);
                     Debug.log(dbg, new Date());
 
-                    timerTask = new TimerTask() {
-                        public void run() {
-                            TimerMethod();
-                        }
-                    };
-                    timer = new Timer("Timer");
-                    timer.schedule(timerTask, left * 1000);
+                    serviceIntent = new Intent(context, ForegroundService.class);
+                    serviceIntent.putExtra("MyTimeout", left);
+                    context.startService(serviceIntent);
+
+                    Debug.log("Service started", new Date());
+
+//                    timerTask = new TimerTask() {
+//                        public void run() {
+//                            TimerMethod();
+//                        }
+//                    };
+//                    timer = new Timer("Timer");
+//                    timer.schedule(timerTask, left * 1000);
 
                     break;
                 }

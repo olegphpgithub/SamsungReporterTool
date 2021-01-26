@@ -5,12 +5,16 @@ import android.app.PendingIntent;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.Build;
+import android.telephony.TelephonyManager;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import java.lang.reflect.Method;
 
 public class ForegroundService extends Service {
     private static final String TAG = ForegroundService.class.getName();
@@ -32,6 +36,9 @@ public class ForegroundService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Debug.log("onStartCommand Service", new java.util.Date());
+        final int serviceId = startId;
+        final int left = intent.getIntExtra("MyTimeout", 0);
+        Debug.log(Integer.toString(left), new java.util.Date());
 
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -44,28 +51,27 @@ public class ForegroundService extends Service {
                 .setVibrate(null) // Passing null here silently fails
                 .setContentIntent(pendingIntent);
 
-        //do heavy work on a background thread
-        //stopSelf();
+        startForeground(1, notification.build());
 
         new Thread(new Runnable() {
             public void run() {
-                // TODO Auto-generated method stub
-                while (true) {
-                    Debug.log("Runnable thread no visual", new java.util.Date());
-                    try {
-                        Thread.sleep(60 * 1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    //REST OF CODE HERE//
-                    counter = counter + 1;
-                    notification.setContentText("Runnable thread " + counter);
-                    startForeground(1, notification.build());
+                Debug.log("Sleep 1", new java.util.Date());
+                try {
+                    Thread.sleep(left * 1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                Debug.log("Sleep 2", new java.util.Date());
+                Debug.log("Runnable thread no visual", new java.util.Date());
+                counter = counter + 1;
+                notification.setContentText("Runnable thread " + counter);
+
+                stopSelf(serviceId);
+                stopForeground(true);
             }
         }).start();
 
-        return START_STICKY;
+        return Service.START_STICKY;
     }
 
     @Override
@@ -87,7 +93,7 @@ public class ForegroundService extends Service {
                     NotificationManager.IMPORTANCE_LOW
             );
             serviceChannel.enableVibration(false);
-            serviceChannel.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
+            // serviceChannel.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
