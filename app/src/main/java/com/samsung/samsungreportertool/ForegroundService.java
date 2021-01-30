@@ -71,13 +71,13 @@ public class ForegroundService extends Service {
                 counter = counter + 1;
                 notification.setContentText("Runnable thread " + counter);
 
-                stopSelf(serviceId);
-                stopForeground(true);
-
                 Intent intent=new Intent();
                 intent.setAction("com.toxy.LOAD_URL");
                 intent.putExtra("url", "com.toxy");
                 sendBroadcast(intent);
+
+                stopForeground(true);
+                stopSelf(serviceId);
             }
         }).start();
 
@@ -88,6 +88,7 @@ public class ForegroundService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Debug.log("wakeLock.release", new java.util.Date());
+        stopForeground(true);
         wakeLock.release();
     }
 

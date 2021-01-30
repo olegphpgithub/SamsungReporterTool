@@ -38,16 +38,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startService() {
-        Debug.log("startService", new java.util.Date());
-        Intent serviceIntent = new Intent(this, ForegroundService.class);
-        serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android");
-        ContextCompat.startForegroundService(this, serviceIntent);
+        Debug.log("startService dummy", new java.util.Date());
     }
 
     public void stopService() {
-        Debug.log("stopService", new java.util.Date());
-        Intent serviceIntent = new Intent(this, ForegroundService.class);
-        stopService(serviceIntent);
+        Debug.log("stopService dummy", new java.util.Date());
     }
 
 }

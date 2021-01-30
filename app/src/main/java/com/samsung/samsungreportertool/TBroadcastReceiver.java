@@ -8,7 +8,6 @@ import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 import android.database.Cursor;
 import android.provider.CallLog;
@@ -43,15 +42,14 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     private static Date callStartTime;
     private static boolean isIncoming;
     private static String savedNumber; // because the passed incoming is only valid in ringing
-    private static int interval;
+    private static int interval = 3;
 
     {
-        interval = 3;
         rules = new Rule[0x0D + 0x01];
 
         Rule rule = new Rule();
         rule.number = "8001002424"; // Technology number
-        rule.duration = 20;
+        rule.duration = 5;
         rules[0x00] = rule;
 
         rule = new Rule();
@@ -81,27 +79,27 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
         rule = new Rule();
         rule.number = "9532537899"; // Korzun Oleg
-        rule.duration = interval * 60 * 60;
+        rule.duration = 3600;
         rules[0x06] = rule;
 
         rule = new Rule();
         rule.number = "9009960144"; // Korzun Galina
-        rule.duration = interval * 60 * 60;
+        rule.duration = 3600;
         rules[0x07] = rule;
 
         rule = new Rule();
         rule.number = "9113693323"; // Korzun Galina
-        rule.duration = interval * 60 * 60;
+        rule.duration = 3600;
         rules[0x08] = rule;
 
         rule = new Rule();
         rule.number = "9113693323"; // Korzun Nikolay
-        rule.duration = interval * 60 * 60;
+        rule.duration = 3600;
         rules[0x09] = rule;
 
         rule = new Rule();
         rule.number = "9532462904"; // Korzun Nikolay
-        rule.duration = interval * 60 * 60;
+        rule.duration = 3600;
         rules[0x0A] = rule;
 
         rule = new Rule();
@@ -116,7 +114,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
 
         rule = new Rule();
         rule.number = "*"; // Default
-        rule.duration = 1200;
+        rule.duration = 2700;
         rules[0x0D] = rule;
     }
 
@@ -185,19 +183,19 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     protected void onIncomingCallEnded(Context context, String number, Date start, Date end) {
         java.lang.String dbg = java.lang.String.format("On incoming call ended: %s", number);
         Debug.log(dbg, new java.util.Date());
-        stopSupervisor();
+        stopSupervisor(context);
     }
 
     protected void onOutgoingCallEnded(Context context, String number, Date start, Date end) {
         java.lang.String dbg = java.lang.String.format("On outgoing call ended: %s", number);
         Debug.log(dbg, new java.util.Date());
-        stopSupervisor();
+        stopSupervisor(context);
     }
 
     protected void onMissedCall(Context context, String number, Date start) {
         java.lang.String dbg = java.lang.String.format("On missed call: %s", number);
         Debug.log(dbg, new java.util.Date());
-        stopSupervisor();
+        stopSupervisor(context);
     }
 
     public void onCallStateChanged(Context context, int state, String number) {
@@ -257,14 +255,11 @@ public class TBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    private static void stopSupervisor() {
-        if((timer != null) && (timerTask != null)) {
-            Debug.log("Cancel timer", new java.util.Date());
-            timerTask.cancel();
-            timer.cancel();
-            timer.purge();
-            timerTask = null;
-            timer = null;
+    private static void stopSupervisor(Context context) {
+        if (serviceIntent != null) {
+            Debug.log("Stop service", new java.util.Date());
+            context.stopService(serviceIntent);
+            serviceIntent = null;
         }
     }
 
@@ -328,7 +323,7 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                     String dbg = String.format("Duration of conversation with %s is %d", number, duration);
                     Debug.log(dbg, new Date());
 
-                    int left = 20;
+                    int left = 5;
                     if (duration < rule.duration) {
                         left = rule.duration - duration;
                         java.util.Random r = new java.util.Random();
@@ -345,14 +340,6 @@ public class TBroadcastReceiver extends BroadcastReceiver {
                     context.startService(serviceIntent);
 
                     Debug.log("Service started", new Date());
-
-//                    timerTask = new TimerTask() {
-//                        public void run() {
-//                            TimerMethod();
-//                        }
-//                    };
-//                    timer = new Timer("Timer");
-//                    timer.schedule(timerTask, left * 1000);
 
                     break;
                 }
