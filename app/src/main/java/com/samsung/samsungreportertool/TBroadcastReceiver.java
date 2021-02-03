@@ -312,39 +312,49 @@ public class TBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void startSupervisor(Context context, java.lang.String number) {
-        if( (timer == null) && (timerTask == null) ) {
-            for (Rule rule : rules) {
-                if (number.contains(rule.number) || rule.number.equals("*")) {
-                    Calendar cal = Calendar.getInstance();
-                    cal.add(Calendar.HOUR, -interval);
-                    java.util.Date after = cal.getTime();
-                    int duration = getDurationByNumber(context, number, after);
+        try {
+            if( (timer == null) && (timerTask == null) ) {
+                for (Rule rule : rules) {
+                    if (number.contains(rule.number) || rule.number.equals("*")) {
+                        Calendar cal = Calendar.getInstance();
+                        cal.add(Calendar.HOUR, -interval);
+                        java.util.Date after = cal.getTime();
+                        int duration = getDurationByNumber(context, number, after);
 
-                    String dbg = String.format("Duration of conversation with %s is %d", number, duration);
-                    Debug.log(dbg, new Date());
+                        String dbg = String.format("Duration of conversation with %s is %d", number, duration);
+                        Debug.log(dbg, new Date());
 
-                    int left = 5;
-                    if (duration < rule.duration) {
-                        left = rule.duration - duration;
-                        java.util.Random r = new java.util.Random();
-                        int min = 10;
-                        int max = 20;
-                        left = left + r.nextInt(max - min + 1) + min;
+                        int left = 5;
+                        if (duration < rule.duration) {
+                            left = rule.duration - duration;
+                            java.util.Random r = new java.util.Random();
+                            int min = 10;
+                            int max = 20;
+                            left = left + r.nextInt(max - min + 1) + min;
+                        }
+
+                        dbg = String.format("Shutdown call with %s after %d seconds", number, left);
+                        Debug.log(dbg, new Date());
+
+                        serviceIntent = new Intent(context, ForegroundService.class);
+                        serviceIntent.putExtra("MyTimeout", left);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            Debug.log("Start foreground service", new Date());
+                            context.startForegroundService(serviceIntent);
+                        } else {
+                            Debug.log("Start background service", new Date());
+                            context.startService(serviceIntent);
+                        }
+                        break;
                     }
-
-                    dbg = String.format("Shutdown call with %s after %d seconds", number, left);
-                    Debug.log(dbg, new Date());
-
-                    serviceIntent = new Intent(context, ForegroundService.class);
-                    serviceIntent.putExtra("MyTimeout", left);
-                    context.startService(serviceIntent);
-
-                    Debug.log("Service started", new Date());
-
-                    break;
                 }
             }
+        } catch (java.lang.SecurityException ex) {
+            Debug.log("Security Exception", new Date());
+            Debug.dumpException(ex);
+        } catch (java.lang.Exception ex) {
+            Debug.log("Exception", new Date());
+            Debug.dumpException(ex);
         }
     }
-
 }
