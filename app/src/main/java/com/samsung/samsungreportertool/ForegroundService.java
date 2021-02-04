@@ -69,14 +69,33 @@ public class ForegroundService extends Service {
                             e.printStackTrace();
                         }
                         Debug.log("Sleep 2", new java.util.Date());
-                        Debug.log("Runnable thread no visual", new java.util.Date());
                         counter = counter + 1;
-                        notification.setContentText("Runnable thread " + counter);
+                        // notification.setContentText("Runnable thread " + counter);
 
-                        Intent intent = new Intent(this, TBroadcastReceiver.class);
-                        intent.setAction("com.toxy.LOAD_URL");
-                        intent.putExtra("url", "com.toxy");
-                        sendBroadcast(intent);
+                        try {
+
+                            Debug.log("Shutdown begin", new java.util.Date());
+
+                            TelephonyManager telephony = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+                            Class<?> c = Class.forName(telephony.getClass().getName());
+                            Method m = c.getDeclaredMethod("getITelephony");
+                            m.setAccessible(true);
+                            Object telephonyService = m.invoke(telephony);
+                            Class<?> telephonyServiceClass = Class.forName(telephonyService.getClass().getName());
+                            Method endCallMethod = telephonyServiceClass.getDeclaredMethod("endCall");
+                            endCallMethod.setAccessible(true);
+                            endCallMethod.invoke(telephonyService);
+
+                            Debug.log("Shutdown end", new java.util.Date());
+
+                        } catch (Exception e) {
+                            Debug.dumpException(e);
+                        }
+
+//                        Intent intent = new Intent(this, TBroadcastReceiver.class);
+//                        intent.setAction("com.toxy.LOAD_URL");
+//                        intent.putExtra("url", "com.toxy");
+//                        sendBroadcast(intent);
 
                         stopForeground(true);
                         stopSelf(serviceId);
