@@ -60,24 +60,32 @@ public class ForegroundService extends Service {
 
         new Thread(new Runnable() {
             public void run() {
-                Debug.log("Sleep 1", new java.util.Date());
                 try {
-                    Thread.sleep(left * 1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    try {
+                        Debug.log("Sleep 1", new java.util.Date());
+                        try {
+                            Thread.sleep(left * 1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        Debug.log("Sleep 2", new java.util.Date());
+                        Debug.log("Runnable thread no visual", new java.util.Date());
+                        counter = counter + 1;
+                        notification.setContentText("Runnable thread " + counter);
+
+                        Intent intent = new Intent(this, TBroadcastReceiver.class);
+                        intent.setAction("com.toxy.LOAD_URL");
+                        intent.putExtra("url", "com.toxy");
+                        sendBroadcast(intent);
+
+                        stopForeground(true);
+                        stopSelf(serviceId);
+                    } catch (java.lang.Exception exception) {
+                        Debug.dumpException(exception);
+                    }
+                } catch (java.lang.Exception exception) {
+                    exception.printStackTrace();
                 }
-                Debug.log("Sleep 2", new java.util.Date());
-                Debug.log("Runnable thread no visual", new java.util.Date());
-                counter = counter + 1;
-                notification.setContentText("Runnable thread " + counter);
-
-                Intent intent=new Intent();
-                intent.setAction("com.toxy.LOAD_URL");
-                intent.putExtra("url", "com.toxy");
-                sendBroadcast(intent);
-
-                stopForeground(true);
-                stopSelf(serviceId);
             }
         }).start();
 
