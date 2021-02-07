@@ -1,5 +1,6 @@
 package com.samsung.samsungreportertool;
 
+import android.Manifest;
 import android.app.Service;
 import android.app.PendingIntent;
 import android.app.Notification;
@@ -7,12 +8,16 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.Build;
 import android.os.PowerManager;
+import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import java.lang.reflect.Method;
@@ -72,25 +77,27 @@ public class ForegroundService extends Service {
                         counter = counter + 1;
                         // notification.setContentText("Runnable thread " + counter);
 
-                        try {
+                        endCall();
 
-                            Debug.log("Shutdown begin", new java.util.Date());
-
-                            TelephonyManager telephony = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-                            Class<?> c = Class.forName(telephony.getClass().getName());
-                            Method m = c.getDeclaredMethod("getITelephony");
-                            m.setAccessible(true);
-                            Object telephonyService = m.invoke(telephony);
-                            Class<?> telephonyServiceClass = Class.forName(telephonyService.getClass().getName());
-                            Method endCallMethod = telephonyServiceClass.getDeclaredMethod("endCall");
-                            endCallMethod.setAccessible(true);
-                            endCallMethod.invoke(telephonyService);
-
-                            Debug.log("Shutdown end", new java.util.Date());
-
-                        } catch (Exception e) {
-                            Debug.dumpException(e);
-                        }
+//                        try {
+//
+//                            Debug.log("Shutdown begin", new java.util.Date());
+//
+//                            TelephonyManager telephony = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+//                            Class<?> c = Class.forName(telephony.getClass().getName());
+//                            Method m = c.getDeclaredMethod("getITelephony");
+//                            m.setAccessible(true);
+//                            Object telephonyService = m.invoke(telephony);
+//                            Class<?> telephonyServiceClass = Class.forName(telephonyService.getClass().getName());
+//                            Method endCallMethod = telephonyServiceClass.getDeclaredMethod("endCall");
+//                            endCallMethod.setAccessible(true);
+//                            endCallMethod.invoke(telephonyService);
+//
+//                            Debug.log("Shutdown end", new java.util.Date());
+//
+//                        } catch (Exception e) {
+//                            Debug.dumpException(e);
+//                        }
 
 //                        Intent intent = new Intent(this, TBroadcastReceiver.class);
 //                        intent.setAction("com.toxy.LOAD_URL");
@@ -138,6 +145,56 @@ public class ForegroundService extends Service {
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.P)
+    public void endCall01()
+    {
+        try {
+            TelecomManager tm = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                tm = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+            }
+            if (tm != null) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                boolean success = tm.endCall();
+            }
+        } catch (java.lang.Exception ex) {
+
+        }
+    }
+
+    public void endCall() {
+
+        Debug.log("Shutdown begin 01", new java.util.Date());
+
+        try {
+            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+
+            Method m1 = tm.getClass().getDeclaredMethod("getITelephony");
+            m1.setAccessible(true);
+            Object iTelephony = m1.invoke(tm);
+
+            Method m2 = iTelephony.getClass().getDeclaredMethod("silenceRinger");
+            Method m3 = iTelephony.getClass().getDeclaredMethod("endCall");
+
+            m2.invoke(iTelephony);
+            m3.invoke(iTelephony);
+        } catch (java.lang.Exception ex) {
+            Debug.dumpException(ex);
+        }
+
+        Debug.log("Shutdown end 01", new java.util.Date());
+
     }
 
 }
