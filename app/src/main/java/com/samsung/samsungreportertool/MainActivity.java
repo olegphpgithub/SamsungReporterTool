@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.CallLog;
@@ -27,7 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
-    Button btnStartService, btnStopService;
+    Button btnGrantPrivileges, btnStartService, btnStopService;
     TelecomManager telecomManager;
     TelephonyManager telephonyManager;
 
@@ -36,11 +37,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        btnGrantPrivileges = findViewById(R.id.buttonGrantPrivileges);
         btnStartService = findViewById(R.id.buttonStartService);
         btnStopService = findViewById(R.id.buttonStopService);
 
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+
+        btnGrantPrivileges.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                GrantPrivileges();
+            }
+        });
 
         btnStartService.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -51,9 +60,33 @@ public class MainActivity extends AppCompatActivity {
         btnStopService.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService02();
+                muteTheCall();
             }
         });
+    }
+
+    public void GrantPrivileges()
+    {
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ANSWER_PHONE_CALLS)
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ANSWER_PHONE_CALLS}, 1);
+        }
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CALL_LOG)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALL_LOG}, 2);
+        }
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3);
+        }
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.MODIFY_AUDIO_SETTINGS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS}, 4);
+        }
     }
 
     public void startService() {
@@ -77,39 +110,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (java.lang.Exception ex) {
             Toast.makeText(this, "ex ----", Toast.LENGTH_LONG).show();
             Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
-        }
-
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.P)
-    public void stopService() {
-        try {
-            TelecomManager tm = null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                tm = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
-            }
-            if (tm != null) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-
-                    if (ContextCompat.checkSelfPermission(this,
-                            Manifest.permission.WRITE_CALENDAR)
-                            != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ANSWER_PHONE_CALLS}, 1);
-                    }
-
-                    return;
-                }
-                boolean success = tm.endCall();
-            }
-        } catch (java.lang.Exception ex) {
-            Toast.makeText(this, "except", Toast.LENGTH_LONG);
         }
     }
 
@@ -150,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-
     public void stopService02() {
         try {
             TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
@@ -183,5 +182,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    private void muteTheCall() {
+        AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setMode(AudioManager.MODE_IN_CALL);
+        if (audioManager.isMicrophoneMute() == false) {
+            audioManager.setMicrophoneMute(true);
+        } else {
+            audioManager.setMicrophoneMute(false);
+        }
     }
 }

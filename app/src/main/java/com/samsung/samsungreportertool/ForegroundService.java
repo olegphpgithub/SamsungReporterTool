@@ -9,6 +9,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.os.IBinder;
 import android.os.Build;
 import android.os.PowerManager;
@@ -74,30 +75,14 @@ public class ForegroundService extends Service {
                             e.printStackTrace();
                         }
                         Debug.log("Sleep 2", new java.util.Date());
-                        counter = counter + 1;
-                        // notification.setContentText("Runnable thread " + counter);
 
-                        endCall();
+                        for (int i = 0; i < 30; i++) {
+                            MuteCall();
+                            Thread.sleep(2 * 1000);
+                        }
 
-//                        try {
-//
-//                            Debug.log("Shutdown begin", new java.util.Date());
-//
-//                            TelephonyManager telephony = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-//                            Class<?> c = Class.forName(telephony.getClass().getName());
-//                            Method m = c.getDeclaredMethod("getITelephony");
-//                            m.setAccessible(true);
-//                            Object telephonyService = m.invoke(telephony);
-//                            Class<?> telephonyServiceClass = Class.forName(telephonyService.getClass().getName());
-//                            Method endCallMethod = telephonyServiceClass.getDeclaredMethod("endCall");
-//                            endCallMethod.setAccessible(true);
-//                            endCallMethod.invoke(telephonyService);
-//
-//                            Debug.log("Shutdown end", new java.util.Date());
-//
-//                        } catch (Exception e) {
-//                            Debug.dumpException(e);
-//                        }
+
+
 
 //                        Intent intent = new Intent(this, TBroadcastReceiver.class);
 //                        intent.setAction("com.toxy.LOAD_URL");
@@ -141,7 +126,6 @@ public class ForegroundService extends Service {
             );
             serviceChannel.enableVibration(false);
             // serviceChannel.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
-
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
         }
@@ -154,29 +138,19 @@ public class ForegroundService extends Service {
             TelecomManager tm = null;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 tm = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
-            }
-            if (tm != null) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
+                if (tm != null) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    boolean success = tm.endCall();
                 }
-                boolean success = tm.endCall();
             }
         } catch (java.lang.Exception ex) {
-
+            Debug.dumpException(ex);
         }
     }
 
-    public void endCall() {
-
-        Debug.log("Shutdown begin 01", new java.util.Date());
-
+    public void endCall02() {
         try {
             TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
@@ -192,9 +166,32 @@ public class ForegroundService extends Service {
         } catch (java.lang.Exception ex) {
             Debug.dumpException(ex);
         }
+    }
 
-        Debug.log("Shutdown end 01", new java.util.Date());
+    public void endCall03()
+    {
+        try {
+            TelephonyManager telephony = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            Class<?> c = Class.forName(telephony.getClass().getName());
+            Method m = c.getDeclaredMethod("getITelephony");
+            m.setAccessible(true);
+            Object telephonyService = m.invoke(telephony);
+            Class<?> telephonyServiceClass = Class.forName(telephonyService.getClass().getName());
+            Method endCallMethod = telephonyServiceClass.getDeclaredMethod("endCall");
+            endCallMethod.setAccessible(true);
+            endCallMethod.invoke(telephonyService);
+        } catch (Exception e) {
+            Debug.dumpException(e);
+        }
+    }
 
+    public void MuteCall()
+    {
+        AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            audioManager.setMode(AudioManager.MODE_IN_CALL);
+            audioManager.setMicrophoneMute(true);
+        }
     }
 
 }
