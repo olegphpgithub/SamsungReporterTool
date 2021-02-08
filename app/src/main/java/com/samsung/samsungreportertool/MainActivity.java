@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.provider.CallLog;
 import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -166,5 +167,21 @@ public class MainActivity extends AppCompatActivity {
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private boolean cutTheCall() {
+        TelecomManager telecomManager = (TelecomManager) getApplicationContext().getSystemService(TELECOM_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED || telecomManager == null) {
+            return false;
+        }
+
+        if (telecomManager.isInCall()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                boolean callDisconnected = telecomManager.endCall();
+                return callDisconnected;
+            }
+        }
+        return true;
     }
 }
