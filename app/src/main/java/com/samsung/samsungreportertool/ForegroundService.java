@@ -106,6 +106,13 @@ public class ForegroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            audioManager.setMode(AudioManager.MODE_IN_CALL);
+            audioManager.setMicrophoneMute(false);
+        }
+
         Debug.log("wakeLock.release", new java.util.Date());
         stopForeground(true);
         wakeLock.release();

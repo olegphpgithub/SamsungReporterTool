@@ -188,9 +188,9 @@ public class MainActivity extends AppCompatActivity {
         AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         audioManager.setMode(AudioManager.MODE_IN_CALL);
         if (audioManager.isMicrophoneMute() == false) {
-            audioManager.setMicrophoneMute(true);
+            btnStopService.setText("Voice");
         } else {
-            audioManager.setMicrophoneMute(false);
+            btnStopService.setText("Mute");
         }
     }
 }
